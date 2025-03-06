@@ -5,7 +5,9 @@ export const {
 
     SALT_ROUNDS = 15,
 
-    DB_PASS = "giuLrirq0Wqr4ZXp",
+    SECRET_JWT_KEY = "AuroraLana99CalaCodigoz99KEY",
+
+    DB_PASS = "PnnuH3ItQh3INPwV",
 
     MONGO_CLUSTER_TEST = `mongodb+srv://ppuchetadev:${DB_PASS}@clustertestconection.secyw.mongodb.net/?retryWrites=true&w=majority&appName=ClusterTestConection`,
 

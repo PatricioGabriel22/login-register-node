@@ -1,19 +1,48 @@
 import express from 'express'
-
-import { PORT, SALT_ROUNDS } from './settings/config.js'
-import { validateUserData } from './functions/validationFunctions.js'
-import { userZodSchema } from './schemas/zod/zod.schema.js'
 import { connectDB } from './settings/DB.js'
-import userSchema from './schemas/user.schema.js'
 
+import { PORT, SALT_ROUNDS, SECRET_JWT_KEY } from './settings/config.js'
+
+import userSchema from './schemas/user.schema.js'
+import { userZodSchema } from './schemas/zod/zod.schema.js'
+
+import { validateUserData } from './functions/validationFunctions.js'
 
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
+
+
+
+
 
 const server = express()
 
 server.use(express.json())
 
 connectDB()
+
+
+
+server.use((req,res,next)=>{
+    const token = req.cookies.acces_token 
+    let data = null 
+
+    req.session = {user:null}
+
+
+    try{
+
+        data = jwt.verify(token,SECRET_JWT_KEY)
+        req.session.user = data
+
+    }catch(error){
+        console.log(error)
+
+    }
+    next()
+
+})
+
 
 
 server.get('/',(req,res) => {
@@ -44,8 +73,27 @@ server.post('/login',async(req,res)=>{
             return res.status(400).json({message:alerta})
             
         } 
-    
-        res.status(200).json({message:`Bienvenido, ${loginUserTarget.username}`})
+        
+        const token = jwt.sign(
+            {id:loginUserTarget._id,username:loginUserTarget.username},
+            SECRET_JWT_KEY,
+            {
+                expiresIn:'1h'
+            }
+        )
+
+
+
+        res.status(200)
+        .cookie('access_token',token,{
+            httpOnly:true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite:'strict'
+        })
+        .json({
+            message:`Bienvenido, ${loginUserTarget.username}`,
+            token:token
+        })
 
     } catch (error) {
         console.log(error)
@@ -99,7 +147,11 @@ server.post('/register',validateUserData(userZodSchema),async(req,res)=>{
 
 
 })
-server.post('/logout',(req,res)=>{})
+server.post('/logout',(req,res)=>{
+    res.
+        clearCookie('access_cookie')
+        .json({message:"logout successful"})
+})
 
 
 
