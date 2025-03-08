@@ -1,4 +1,6 @@
 import express from 'express'
+import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import { connectDB } from './settings/DB.js'
 
 import { PORT, SALT_ROUNDS, SECRET_JWT_KEY } from './settings/config.js'
@@ -18,25 +20,36 @@ import jwt from 'jsonwebtoken'
 const server = express()
 
 server.use(express.json())
+server.use(cors({ origin: 'http://localhost:5173', credentials: true })) //modificar para produccion
+server.use(cookieParser())
+
+
 
 connectDB()
 
 
 
 server.use((req,res,next)=>{
-    const token = req.cookies.acces_token 
+    const token = req.cookies?.access_token 
     let data = null 
+    
 
     req.session = {user:null}
 
+    
+    if(token){
 
-    try{
+        try{
 
-        data = jwt.verify(token,SECRET_JWT_KEY)
-        req.session.user = data
 
-    }catch(error){
-        console.log(error)
+            data = jwt.verify(token,SECRET_JWT_KEY)
+            req.session.user = data
+            console.log(data)
+
+        }catch(error){
+            console.log(error)
+            
+        }
 
     }
     next()
@@ -51,7 +64,9 @@ server.get('/',(req,res) => {
 })
 
 
-server.get('/protected',(req,res)=>{})
+server.get('/protected',(req,res)=>{
+    res.json({data:req.session.user})
+})
 
 
 
@@ -92,8 +107,13 @@ server.post('/login',async(req,res)=>{
         })
         .json({
             message:`Bienvenido, ${loginUserTarget.username}`,
+            username:loginUserTarget.username,
             token:token
         })
+
+    
+
+
 
     } catch (error) {
         console.log(error)
