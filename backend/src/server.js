@@ -1,6 +1,5 @@
 import express from 'express'
 import cors from 'cors'
-import cookieParser from 'cookie-parser'
 import { connectDB } from './settings/DB.js'
 
 import { PORT, SALT_ROUNDS, SECRET_JWT_KEY } from './settings/config.js'
@@ -21,7 +20,7 @@ const server = express()
 
 server.use(express.json())
 server.use(cors({ origin: 'http://localhost:5173', credentials: true })) //modificar para produccion
-server.use(cookieParser())
+
 
 
 
@@ -44,7 +43,7 @@ server.use((req,res,next)=>{
 
             data = jwt.verify(token,SECRET_JWT_KEY)
             req.session.user = data
-            console.log(data)
+            
 
         }catch(error){
             console.log(error)
